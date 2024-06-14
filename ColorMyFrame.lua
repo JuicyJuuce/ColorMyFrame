@@ -6,13 +6,17 @@ local f = CreateFrame("Frame")
 local defaults = {
 	someOption = true,
   r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
-  a = 1.0,
 }
 
 function f:OnEvent(event, ...)
 	self[event](self, event, ...)
 end
 
+f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", f.OnEvent)
+
+-- this function is the actual meat of the addon
 function f:myUpdateHealthColor(frame)
   if ( UnitIsUnit(frame.unit, "player") ) then
     local r, g, b = self.db.r, self.db.g, self.db.b
@@ -47,10 +51,6 @@ function f:CHAT_MSG_CHANNEL(event, text, playerName, _, channelName)
 	print(event, text, playerName, channelName)
 end
 
-f:RegisterEvent("ADDON_LOADED")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:SetScript("OnEvent", f.OnEvent)
-
 function f:InitializeOptions()
 	self.optionsPanel = CreateFrame("Frame")
 	self.optionsPanel.name = thisAddonName
@@ -79,30 +79,29 @@ function f:InitializeOptions()
   t:SetAllPoints(splot);
   
   local function setOptionsPanelColor()
-    colorText:SetText("Your raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b..", a = "..self.db.a)
-    t:SetColorTexture(self.db.r, self.db.g, self.db.b, self.db.a);
+    colorText:SetText("Your raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
+    t:SetColorTexture(self.db.r, self.db.g, self.db.b);
   end
   setOptionsPanelColor()
 
-  function ShowColorPicker(r, g, b, a, changedCallback)
+  function ShowColorPicker(r, g, b, changedCallback)
    local info = {}
-   info.hasOpacity, info.opacity = (a ~= nil), a;
    info.r, info.g, info.b = r, g, b
    info.swatchFunc, info.func, info.opacityFunc, info.cancelFunc = changedCallback, changedCallback, changedCallback, changedCallback;
    ColorPickerFrame:SetupColorPickerAndShow(info)
   end
 
   local function myColorCallback(restore)
-    local newR, newG, newB, newA;
+    local newR, newG, newB;
     if restore then
-      newR, newG, newB, newA = restore.r, restore.g, restore.b, restore.a
+      newR, newG, newB = restore.r, restore.g, restore.b
     else
       -- Something changed
-      newA, newR, newG, newB = ColorPickerFrame:GetColorAlpha(), ColorPickerFrame:GetColorRGB();
+      newR, newG, newB = ColorPickerFrame:GetColorRGB();
     end
 
     -- Update our internal storage.
-    self.db.r, self.db.g, self.db.b, self.db.a = newR, newG, newB, newA;
+    self.db.r, self.db.g, self.db.b = newR, newG, newB;
     setOptionsPanelColor()
     -- And update any UI elements that use this color...
     CompactRaidFrameContainerMixin:TryUpdate()
@@ -110,7 +109,7 @@ function f:InitializeOptions()
   
 	btn:SetScript("OnClick", function()
 		print("You clicked me!")
-    ShowColorPicker(self.db.r, self.db.g, self.db.b, self.db.a, myColorCallback);
+    ShowColorPicker(self.db.r, self.db.g, self.db.b, myColorCallback);
 	end)
 
 	InterfaceOptions_AddCategory(self.optionsPanel)
@@ -124,6 +123,5 @@ SlashCmdList.CMF = function(msg, editBox)
 end
 
 function ColorMyFrame_OnAddonCompartmentClick(addonName, buttonName, menuButtonFrame)
-  print("Hello from the addon compartment, the '"..addonName.."' addon was clicked with "..buttonName)
   InterfaceOptionsFrame_OpenToCategory(f.optionsPanel)
 end

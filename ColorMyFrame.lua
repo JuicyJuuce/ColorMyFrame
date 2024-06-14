@@ -1,20 +1,20 @@
 local thisAddonName = "ColorMyFrame"
 local thisAddonTitle = "Color My Frame"
 
-local f = CreateFrame("Frame")
-
 local defaults = {
 	someOption = true,
   r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
 }
 
-function f:OnEvent(event, ...)
-	self[event](self, event, ...)
-end
+local f = CreateFrame("Frame")
 
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", f.OnEvent)
+
+function f:OnEvent(event, ...)
+	self[event](self, event, ...)
+end
 
 -- this function is the actual meat of the addon
 function f:myUpdateHealthColor(frame)
@@ -78,6 +78,12 @@ function f:InitializeOptions()
   local t = splot:CreateTexture(nil, 'ARTWORK');
   t:SetAllPoints(splot);
   
+--	do
+--		local data = { };
+--		local initializer = Settings.CreatePanelInitializer("RaidFramePreviewTemplate", data);
+--		layout:AddInitializer(initializer);
+--	end
+
   local function setOptionsPanelColor()
     colorText:SetText("Your raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
     t:SetColorTexture(self.db.r, self.db.g, self.db.b);
@@ -104,7 +110,7 @@ function f:InitializeOptions()
     self.db.r, self.db.g, self.db.b = newR, newG, newB;
     setOptionsPanelColor()
     -- And update any UI elements that use this color...
-    CompactRaidFrameContainerMixin:TryUpdate()
+    CompactRaidFrameContainer:TryUpdate()
   end
   
 	btn:SetScript("OnClick", function()

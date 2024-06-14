@@ -4,6 +4,7 @@
 ## Author: JuicyJuuce
 ## Version: 0.1
 ## IconTexture: Interface\AddOns\ColorMyFrame\ColorMyFrameIcon.png
+## SavedVariables: ColorMyFrameDB
 ## AddonCompartmentFunc: ColorMyFrame_OnAddonCompartmentClick
 
 ColorMyFrame.lua

@@ -3,6 +3,7 @@
 ## Notes: Changes the color of your own unit frame to make it stand out among the other party/raid frames.
 ## Author: JuicyJuuce
 ## Version: 0.1
+## IconTexture: Interface\AddOns\ColorMyFrame\ColorMyFrameIcon.png
 ## AddonCompartmentFunc: ColorMyFrame_OnAddonCompartmentClick
 
 ColorMyFrame.lua

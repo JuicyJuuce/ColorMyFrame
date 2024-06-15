@@ -26,6 +26,13 @@ local defaults = {
   r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
 }
 
+local newDefaults = {
+  recolorOthers = false,
+  slider = 140,
+  selection = 1,
+  r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
+}
+
 local f = CreateFrame("Frame")
 f.category = {}
 --[[
@@ -38,12 +45,13 @@ local category = Settings.RegisterCanvasLayoutCategory(frame, "My AddOn")
 Settings.RegisterAddOnCategory(category)
 ]]
 
---[[
+---[[
 function f:doNewADDON_LOADED(event, addOnName)
   --ColorMyFrame_SavedVars = {}
-  ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or {}
+  ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(newDefaults)
   print("printing ColorMyFrame_SavedVars:")
   myPrintTable(ColorMyFrame_SavedVars)
+  self.newDb = ColorMyFrame_SavedVars
 
   local function OnSettingChanged(_, setting, value)
     local variable = setting:GetVariable()
@@ -52,20 +60,45 @@ function f:doNewADDON_LOADED(event, addOnName)
 
   --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)
 
-  f.category = Settings.RegisterVerticalLayoutCategory(alternateAddonName)
+  f.category, f.layout = Settings.RegisterVerticalLayoutCategory(alternateAddonName)
 
   --layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(PING_SYSTEM_LABEL));
 
-	-- Reset Chat Positions
+  local function ShowColorPicker(r, g, b, changedCallback)
+   local info = {}
+   info.r, info.g, info.b = r, g, b
+   info.swatchFunc, info.func, info.opacityFunc, info.cancelFunc = changedCallback, changedCallback, changedCallback, changedCallback;
+   ColorPickerFrame:SetupColorPickerAndShow(info)
+  end
+
+  local function myColorCallback(restore)
+    local newR, newG, newB;
+    if restore then
+      newR, newG, newB = restore.r, restore.g, restore.b
+    else
+      -- Something changed
+      newR, newG, newB = ColorPickerFrame:GetColorRGB();
+    end
+
+    -- Update our internal storage.
+    self.newDb.r, self.newDb.g, self.newDb.b = newR, newG, newB;
+    --setOptionsPanelColor()
+
+    -- And update any UI elements that use this color...
+    CompactRaidFrameContainer:TryUpdate()
+  end
+
+	-- Select Color
 	do
 		local function OnButtonClick()
-			colorpicker();
+      print("You clicked the new me!")
+      ShowColorPicker(self.newDb.r, self.newDb.g, self.newDb.b, myColorCallback);
 		end
 
 		local addSearchTags = true;
     local tooltip = "Select the color that you want your own raid frame to be. Note: due to how raid frames are shaded, the result will appear a little darker."
-		local initializer = CreateSettingsButtonInitializer("Your raid frame color", Select Color, OnButtonClick, tooltip, addSearchTags);
-		layout:AddInitializer(initializer);
+		local initializer = CreateSettingsButtonInitializer("Your raid frame color", "Select Color", OnButtonClick, tooltip, addSearchTags);
+		self.layout:AddInitializer(initializer);
 	end
 
   do
@@ -137,7 +170,7 @@ f:SetScript("OnEvent", f.OnEvent)
 -- this function is the actual meat of the addon
 function f:myUpdateHealthColor(frame)
   if ( UnitIsUnit(frame.unit, "player") ) then
-    local r, g, b = self.db.r, self.db.g, self.db.b
+    local r, g, b = self.newDb.r, self.newDb.g, self.newDb.b
     if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
       frame.healthBar:SetStatusBarColor(r, g, b);
     end
@@ -146,7 +179,7 @@ end
 
 function f:ADDON_LOADED(event, addOnName)
   if addOnName == thisAddonName then
-    --self.doNewADDON_LOADED(event, addOnName)
+    self:doNewADDON_LOADED(event, addOnName)
     ColorMyFrameDB = ColorMyFrameDB or CopyTable(defaults)
     print("printing ColorMyFrameDB:")
     myPrintTable(ColorMyFrameDB)
@@ -205,7 +238,7 @@ function f:InitializeOptions()
     t:SetColorTexture(self.db.r, self.db.g, self.db.b);
   end
   setOptionsPanelColor()
-
+--[[
   local function ShowColorPicker(r, g, b, changedCallback)
    local info = {}
    info.r, info.g, info.b = r, g, b
@@ -228,7 +261,7 @@ function f:InitializeOptions()
     -- And update any UI elements that use this color...
     CompactRaidFrameContainer:TryUpdate()
   end
-
+--]]
   btn:SetScript("OnClick", function()
     print("You clicked me!")
     ShowColorPicker(self.db.r, self.db.g, self.db.b, myColorCallback);

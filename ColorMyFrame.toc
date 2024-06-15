@@ -8,4 +8,5 @@
 ## SavedVariables: ColorMyFrameDB, ColorMyFrame_SavedVars
 ## AddonCompartmentFunc: ColorMyFrame_OnAddonCompartmentClick
 
-ColorMyFrame.lua
+ColorMyFrame.xml
+# ColorMyFrame.lua

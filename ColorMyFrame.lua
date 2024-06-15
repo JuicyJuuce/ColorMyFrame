@@ -1,6 +1,24 @@
+-- TO DO:
+--   addSearchTags?
+
 local thisAddonName, ns = ...
-local alternateAddonName = "Test Color"
+local alternateAddonName = "NEW Color My Frame"
 --print(thisAddonName, ns.foo)
+
+local thisAddonTitle = "Color My Frame"
+
+local defaults = {
+  someOption = true,
+  r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
+}
+
+local newDefaults = {
+  recolorOthers = false,
+  slider = 140,
+  selection = 1,
+  r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
+  othersR = 0/255, othersG = 255/255, othersB = 0/255, -- green
+}
 
 local function myPrintTable(yourTable, recurseLevel)
   if type(yourTable) == "table" then
@@ -19,22 +37,9 @@ local function myPrintTable(yourTable, recurseLevel)
   end
 end
 
-local thisAddonTitle = "Color My Frame"
-
-local defaults = {
-  someOption = true,
-  r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
-}
-
-local newDefaults = {
-  recolorOthers = false,
-  slider = 140,
-  selection = 1,
-  r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
-}
-
 local f = CreateFrame("Frame")
 f.category = {}
+
 --[[
 local frame = CreateFrame("Frame")
 local background = frame:CreateTexture()
@@ -46,6 +51,14 @@ Settings.RegisterAddOnCategory(category)
 ]]
 
 ---[[
+ManyRaidFramesPreviewMixin = { };
+
+function ManyRaidFramesPreviewMixin:OnLoad()
+  print("in ManyRaidFramesPreviewMixin:OnLoad()")
+	CompactUnitFrame_SetUpFrame(self.RaidFrame, DefaultCompactUnitFrameSetup);
+	CompactUnitFrame_SetUnit(self.RaidFrame, "player");
+end
+
 function f:doNewADDON_LOADED(event, addOnName)
   --ColorMyFrame_SavedVars = {}
   ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(newDefaults)
@@ -53,9 +66,12 @@ function f:doNewADDON_LOADED(event, addOnName)
   myPrintTable(ColorMyFrame_SavedVars)
   self.newDb = ColorMyFrame_SavedVars
 
+  -- am i using this?
   local function OnSettingChanged(_, setting, value)
     local variable = setting:GetVariable()
     ColorMyFrame_SavedVars[variable] = value
+    print("print OnSettingsChanged(): ColorMyFrame_SavedVars")
+    myPrintTable(ColorMyFrame_OnAddonCompartmentClick)
   end
 
   --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)
@@ -68,31 +84,42 @@ function f:doNewADDON_LOADED(event, addOnName)
    local info = {}
    info.r, info.g, info.b = r, g, b
    info.swatchFunc, info.func, info.opacityFunc, info.cancelFunc = changedCallback, changedCallback, changedCallback, changedCallback;
+   print("info:")
+   myPrintTable(info)
    ColorPickerFrame:SetupColorPickerAndShow(info)
   end
 
-  local function myColorCallback(restore)
-    local newR, newG, newB;
+  local function newRGB(restore)
     if restore then
-      newR, newG, newB = restore.r, restore.g, restore.b
+      -- User canceled (probably)
+      return restore.r, restore.g, restore.b
     else
       -- Something changed
-      newR, newG, newB = ColorPickerFrame:GetColorRGB();
+      return ColorPickerFrame:GetColorRGB();
     end
-
-    -- Update our internal storage.
-    self.newDb.r, self.newDb.g, self.newDb.b = newR, newG, newB;
-    --setOptionsPanelColor()
-
-    -- And update any UI elements that use this color...
-    CompactRaidFrameContainer:TryUpdate()
   end
 
-	-- Select Color
+  local function userColorCallback(restore)
+    -- Update our internal storage.
+    self.newDb.r, self.newDb.g, self.newDb.b = newRGB(restore)
+    -- And update any UI elements that use this color...
+    CompactRaidFrameContainer:TryUpdate()
+    --CompactUnitFrameProfiles:ApplyCurrentSettings()
+  end
+
+  local function othersColorCallback(restore)
+    -- Update our internal storage.
+    self.newDb.othersR, self.newDb.othersG, self.newDb.othersB = newRGB(restore)
+    -- And update any UI elements that use this color...
+    CompactRaidFrameContainer:TryUpdate()
+    --CompactUnitFrameProfiles:ApplyCurrentSettings()
+  end
+
+-- Select user's color
 	do
 		local function OnButtonClick()
-      print("You clicked the new me!")
-      ShowColorPicker(self.newDb.r, self.newDb.g, self.newDb.b, myColorCallback);
+      print("button: Select Your Color")
+      ShowColorPicker(self.newDb.r, self.newDb.g, self.newDb.b, userColorCallback);
 		end
 
 		local addSearchTags = true;
@@ -100,17 +127,37 @@ function f:doNewADDON_LOADED(event, addOnName)
 		local initializer = CreateSettingsButtonInitializer("Your raid frame color", "Select Color", OnButtonClick, tooltip, addSearchTags);
 		self.layout:AddInitializer(initializer);
 	end
-
+--[[
   do
+    local setting = Settings.RegisterCVarSetting(category, "showPingsInChat", Settings.VarType.Boolean, SHOW_PINGS_IN_CHAT);
+    local function OnButtonClick()
+        ShowUIPanel(ChatConfigFrame);
+        ChatConfigFrameChatTabManager:UpdateSelection(DEFAULT_CHAT_FRAME:GetID());
+    end;
+    local initializer = CreateSettingsCheckBoxWithButtonInitializer(setting, PING_CHAT_SETTINGS, OnButtonClick, true, OPTION_TOOLTIP_SHOW_PINGS_IN_CHAT);
+		local initializer = CreateSettingsCheckboxWithButtonInitializer("Your raid frame color", "Select Color", OnButtonClick, tooltip, addSearchTags);
+  end
+]]
+	-- Select other players's color
+  do
+		local function OnButtonClick()
+      print("button: Re-color Other Players")
+      print("print self.newDb:")
+      myPrintTable(self.newDb)
+      ShowColorPicker(self.newDb.othersR, self.newDb.othersG, self.newDb.othersB, othersColorCallback);
+		end
+
     local variable = "recolorOthers"
     local name = "Re-color Other Players"
-    local tooltip = "Check this to also change the colors of other player's frames. Class colors must be disabled."
+    local tooltip = "Change the colors of _other_ player's frames. Class colors must be disabled."
     local defaultValue = false
     local value = ColorMyFrame_SavedVars[variable] or defaultValue
 
     local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
-    Settings.CreateCheckBox(f.category, setting, tooltip)
-    Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+    --Settings.CreateCheckBox(f.category, setting, tooltip)
+    local initializer = CreateSettingsCheckBoxWithButtonInitializer(setting, "Select Color", OnButtonClick, true, "Your raid frame color") --addSearchTags?
+		Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+    self.layout:AddInitializer(initializer);
   end
 
   do
@@ -149,6 +196,13 @@ function f:doNewADDON_LOADED(event, addOnName)
     local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
     Settings.CreateDropDown(f.category, setting, GetOptions, tooltip)
     Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+  end
+
+	-- Raid Frame Preview
+  do
+    local data = { };
+    local initializer = Settings.CreatePanelInitializer("ManyRaidFramesPreviewTemplate", data);
+    self.layout:AddInitializer(initializer);
   end
 
   Settings.RegisterAddOnCategory(f.category)
@@ -202,7 +256,7 @@ end
 
 function f:InitializeOptions()
   self.optionsPanel = CreateFrame("Frame")
-  self.optionsPanel.name = thisAddonName
+  self.optionsPanel.name = thisAddonTitle
 
   local cb = CreateFrame("CheckButton", nil, self.optionsPanel, "InterfaceOptionsCheckButtonTemplate")
   cb:SetPoint("TOPLEFT", 20, -20)
@@ -227,12 +281,6 @@ function f:InitializeOptions()
   local t = splot:CreateTexture(nil, 'ARTWORK');
   t:SetAllPoints(splot);
 
---  do
---    local data = { };
---    local initializer = Settings.CreatePanelInitializer("RaidFramePreviewTemplate", data);
---    layout:AddInitializer(initializer);
---  end
-
   local function setOptionsPanelColor()
     colorText:SetText("Your raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
     t:SetColorTexture(self.db.r, self.db.g, self.db.b);
@@ -246,7 +294,7 @@ function f:InitializeOptions()
    ColorPickerFrame:SetupColorPickerAndShow(info)
   end
 
-  local function myColorCallback(restore)
+  local function userColorCallback(restore)
     local newR, newG, newB;
     if restore then
       newR, newG, newB = restore.r, restore.g, restore.b
@@ -264,7 +312,7 @@ function f:InitializeOptions()
 --]]
   btn:SetScript("OnClick", function()
     print("You clicked me!")
-    ShowColorPicker(self.db.r, self.db.g, self.db.b, myColorCallback);
+    ShowColorPicker(self.db.r, self.db.g, self.db.b, userColorCallback);
   end)
 
   InterfaceOptions_AddCategory(self.optionsPanel)

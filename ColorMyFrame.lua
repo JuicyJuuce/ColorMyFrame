@@ -1,4 +1,24 @@
-local thisAddonName = "ColorMyFrame"
+local thisAddonName, ns = ...
+local alternateAddonName = "Test Color"
+--print(thisAddonName, ns.foo)
+
+local function myPrintTable(yourTable, recurseLevel)
+  if type(yourTable) == "table" then
+    recurseLevel = recurseLevel or 0
+    indentString = string.rep("  ", recurseLevel)  
+    for key, value in pairs(yourTable) do
+      if type(value) == "table" then
+        print(indentString, key.." is table:")
+        myPrintTable(value, recurseLevel + 1)
+      else
+        print(indentString, key, value)
+      end
+    end
+  else
+    print(indentString, " is not a table.")
+  end
+end
+
 local thisAddonTitle = "Color My Frame"
 
 local defaults = {
@@ -7,6 +27,100 @@ local defaults = {
 }
 
 local f = CreateFrame("Frame")
+f.category = {}
+--[[
+local frame = CreateFrame("Frame")
+local background = frame:CreateTexture()
+background:SetAllPoints(frame)
+background:SetColorTexture(1, 0, 1, 0.5)
+
+local category = Settings.RegisterCanvasLayoutCategory(frame, "My AddOn")
+Settings.RegisterAddOnCategory(category)
+]]
+
+--[[
+function f:doNewADDON_LOADED(event, addOnName)
+  --ColorMyFrame_SavedVars = {}
+  ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or {}
+  print("printing ColorMyFrame_SavedVars:")
+  myPrintTable(ColorMyFrame_SavedVars)
+
+  local function OnSettingChanged(_, setting, value)
+    local variable = setting:GetVariable()
+    ColorMyFrame_SavedVars[variable] = value
+  end
+
+  --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)
+
+  f.category = Settings.RegisterVerticalLayoutCategory(alternateAddonName)
+
+  --layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(PING_SYSTEM_LABEL));
+
+	-- Reset Chat Positions
+	do
+		local function OnButtonClick()
+			colorpicker();
+		end
+
+		local addSearchTags = true;
+    local tooltip = "Select the color that you want your own raid frame to be. Note: due to how raid frames are shaded, the result will appear a little darker."
+		local initializer = CreateSettingsButtonInitializer("Your raid frame color", Select Color, OnButtonClick, tooltip, addSearchTags);
+		layout:AddInitializer(initializer);
+	end
+
+  do
+    local variable = "recolorOthers"
+    local name = "Re-color Other Players"
+    local tooltip = "Check this to also change the colors of other player's frames. Class colors must be disabled."
+    local defaultValue = false
+    local value = ColorMyFrame_SavedVars[variable] or defaultValue
+
+    local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
+    Settings.CreateCheckBox(f.category, setting, tooltip)
+    Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+  end
+
+  do
+    local variable = "slider"
+    local name = "Test Slider"
+    local tooltip = "This is a tooltip for the slider."
+    local defaultValue = 180
+    print("ColorMyFrame_SavedVars[variable] is "..(ColorMyFrame_SavedVars[variable] or "nil"))
+    local value = ColorMyFrame_SavedVars[variable] or defaultValue
+    local minValue = 90
+    local maxValue = 360
+    local step = 10
+
+    local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
+    local options = Settings.CreateSliderOptions(minValue, maxValue, step)
+    options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right);
+    Settings.CreateSlider(f.category, setting, options, tooltip)
+    Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+  end
+
+  do
+    local variable = "selection"
+    local defaultValue = 2  -- Corresponds to "Option 2" below.
+    local value = ColorMyFrame_SavedVars[variable] or defaultValue
+    local name = "Test Dropdown"
+    local tooltip = "This is a tooltip for the dropdown."
+
+    local function GetOptions()
+      local container = Settings.CreateControlTextContainer()
+      container:Add(1, "Option 1")
+      container:Add(2, "Option 2")
+      container:Add(3, "Option 3")
+      return container:GetData()
+    end
+
+    local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
+    Settings.CreateDropDown(f.category, setting, GetOptions, tooltip)
+    Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+  end
+
+  Settings.RegisterAddOnCategory(f.category)
+end
+--]]
 
 function f:OnEvent(event, ...)
   self[event](self, event, ...)
@@ -14,7 +128,11 @@ end
 
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+--f:RegisterEvent("CHAT_MSG_CHANNEL")
 f:SetScript("OnEvent", f.OnEvent)
+
+--		local newList = CreateFrame("Button", "DropDownList"..UIDROPDOWNMENU_MAXLEVELS, nil, "UIDropDownListTemplate");
+
 
 -- this function is the actual meat of the addon
 function f:myUpdateHealthColor(frame)
@@ -27,14 +145,16 @@ function f:myUpdateHealthColor(frame)
 end
 
 function f:ADDON_LOADED(event, addOnName)
-  print(event, addOnName)
   if addOnName == thisAddonName then
+    --self.doNewADDON_LOADED(event, addOnName)
     ColorMyFrameDB = ColorMyFrameDB or CopyTable(defaults)
+    print("printing ColorMyFrameDB:")
+    myPrintTable(ColorMyFrameDB)
     self.db = ColorMyFrameDB
     self:InitializeOptions()
     hooksecurefunc("JumpOrAscendStart", function()
       if self.db.someOption then
-        print("Your character jumped.")
+        --print("Your character jumped.")
       end
     end)
     hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
@@ -44,11 +164,7 @@ function f:ADDON_LOADED(event, addOnName)
 end
 
 function f:PLAYER_ENTERING_WORLD(event, isLogin, isReload)
-  print(event, isLogin, isReload)
-end
-
-function f:CHAT_MSG_CHANNEL(event, text, playerName, _, channelName)
-  print(event, text, playerName, channelName)
+  --print(event, isLogin, isReload)
 end
 
 function f:InitializeOptions()
@@ -129,5 +245,7 @@ SlashCmdList.CMF = function(msg, editBox)
 end
 
 function ColorMyFrame_OnAddonCompartmentClick(addonName, buttonName, menuButtonFrame)
+  print("f.category:")
+  myPrintTable(f.category)
   InterfaceOptionsFrame_OpenToCategory(f.optionsPanel)
 end

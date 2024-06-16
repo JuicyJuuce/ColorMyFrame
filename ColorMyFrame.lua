@@ -1,6 +1,7 @@
 -- TO DO:
 --   addSearchTags?
 --   fixdefaultsbutton
+--   check if my use of UnitIsEnemy(unit, "player") correctly detects arena frames
 
 local thisAddonName, ns = ...
 local alternateAddonName = "NEW Color My Frame"
@@ -243,17 +244,21 @@ f:SetScript("OnEvent", f.OnEvent)
 -- this function is the actual meat of the addon
 function f:myUpdateHealthColor(frame)
     local unit = frame.unit
-    --print("frame.useClassColors is ", frame.useClassColors)
-    --print("frame.pvpUseClassColors is ", frame.pvpUseClassColors)
+    local useClassColors = CVarCallbackRegistry:GetCVarValueBool("raidFramesDisplayClassColor")
+    local pvpUseClassColors = CVarCallbackRegistry:GetCVarValueBool("pvpFramesDisplayClassColor")
+    --print("useClassColors is ", useClassColors)
+    --print("pvpUseClassColors is ", pvpUseClassColors)
     --print('UnitIsFriend(unit, "player") is ', UnitIsFriend(unit, "player"))
     --print('UnitIsEnemy(unit, "player") is ', UnitIsEnemy(unit, "player"))
 
+    -- color user's frame
     if ( UnitIsUnit(unit, "player") ) then
         local r, g, b = self.newDb.r, self.newDb.g, self.newDb.b
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
-    elseif  ( not frame.useClassColors and UnitIsFriend(unit, "player") or not frame.pvpUseClaseColors and UnitIsEnemy(unit, "player") ) then
+    -- color other players' frames
+    elseif  ( not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player") ) then
         print("frame in myUpdateHealthColor:")
         print(unit)
         myPrintTable(frame, 0, 1, "lass", true)

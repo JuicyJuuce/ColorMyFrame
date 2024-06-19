@@ -11,10 +11,10 @@
 --   maybe disable the secure hook if both color options are unchecked?
 
 local thisAddonName, ns = ...
+local thisAddonTitle = "Color My Frame"
+
 local alternateAddonName = "NEW Color My Frame"
 --print(thisAddonName, ns.foo)
-
-local thisAddonTitle = "Color My Frame"
 
 local defaults = {
     someOption = true,
@@ -30,37 +30,35 @@ local newDefaults = {
 }
 
 local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel, searchString, showParentKey, parentKey)
-    if 1 then return else
-        if type(yourTable) == "table" then
-            recurseLevel = recurseLevel or 0
-            maxRecurseLevel = maxRecurseLevel or 0
-            searchString = searchString or ""
-            showParentKey = showParentKey or false
-            parentKey = showParentKey and (parentKey or "") or ""
-            indentString = string.rep("  ", recurseLevel) 
-            local classStrFound
-            for key, value in pairs(yourTable) do
-                if (searchString ~= "") then
-                    print("searchString is ", searchString, ", parentKey is ", parentKey, ", key is ", key)
-                    classStrFound = string.find(indentString, searchString)
-                else
-                    classStrFound = nil
-                end
-                if type(value) == "table" then
-                    --print(indentString, parentKey, key.." is table:")
-                    if (maxRecurseLevel == 0 or recurseLevel < maxRecurseLevel) then
-                        myPrintTable(value, recurseLevel + 1, maxRecurseLevel, showParentKey, key)
-                    end
-                elseif (not searchString or (classStrFound)) then
-                        if (classStrFound) then
-                            indentString = indentString.."    ---->  "
-                        end
-                        print(parentKey, indentString, key, value)
-                end
+    if type(yourTable) == "table" then
+        recurseLevel = recurseLevel or 0
+        maxRecurseLevel = maxRecurseLevel or 0
+        searchString = searchString or ""
+        showParentKey = showParentKey or false
+        parentKey = showParentKey and (parentKey or "") or ""
+        indentString = string.rep("  ", recurseLevel) 
+        local classStrFound
+        for key, value in pairs(yourTable) do
+            if (searchString ~= "") then
+                print("searchString is ", searchString, ", parentKey is ", parentKey, ", key is ", key)
+                classStrFound = string.find(indentString, searchString)
+            else
+                classStrFound = nil
             end
-        else
-            print(indentString, " is not a table.")
+            if type(value) == "table" then
+                --print(indentString, parentKey, key.." is table:")
+                if (maxRecurseLevel == 0 or recurseLevel < maxRecurseLevel) then
+                    myPrintTable(value, recurseLevel + 1, maxRecurseLevel, showParentKey, key)
+                end
+            elseif (not searchString or (classStrFound)) then
+                    if (classStrFound) then
+                        indentString = indentString.."    ---->  "
+                    end
+                    print(parentKey, indentString, key, value)
+            end
         end
+    else
+        print(indentString, " is not a table.")
     end
 end
 
@@ -85,6 +83,10 @@ function ColorMyFrame_RaidFramePreviewMixin:OnLoad()
     CompactUnitFrame_SetUpFrame(self.RaidFrame, DefaultCompactUnitFrameSetup);
     CompactUnitFrame_SetUnit(self.RaidFrame, "player");
     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
+
+    self.UserColorPreview:SetColorTexture(f.newDb.r, f.newDb.g, f.newDb.b);
+    self.OthersColorPreview:SetColorTexture(f.newDb.othersR, f.newDb.othersG, f.newDb.othersB);
+
 --[[
     CompactUnitFrame_SetUpFrame(self.RaidFrame2, DefaultCompactUnitFrameSetup);
     CompactUnitFrame_SetUnit(self.RaidFrame2, "player");
@@ -266,6 +268,7 @@ end
 function f:ADDON_LOADED(event, addOnName)
     if addOnName == thisAddonName then
         self:doNewADDON_LOADED(event, addOnName)
+
         ColorMyFrameDB = ColorMyFrameDB or CopyTable(defaults)
         --print("printing ColorMyFrameDB:")
         --myPrintTable(ColorMyFrameDB)

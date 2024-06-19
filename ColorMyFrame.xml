@@ -39,14 +39,6 @@
 			</Button-->
 		</Frames>
 		<Layers>
-			<Layer level="ARTWORK">
-				<!-- placing the color preview is a complete hack job -->
-				<Texture parentKey="ColorWheel" atlas="colorblind-colorwheel" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Instructions1" relativePoint="TOPRIGHT" x="0" y="0"/>
-					</Anchors>
-				</Texture>
-			</Layer>
 			<Layer level="OVERLAY">
 				<FontString text="Your Raid Frame Color Preview" inherits="GameFontHighlightSmall">
 					<Anchors>
@@ -54,14 +46,29 @@
 					</Anchors>
 				</FontString>
 			</Layer>
+			<Layer level="ARTWORK">
+				<!-- placing the color preview is a complete hack job -->
+				<Texture parentKey="OthersColorPreview">
+					<Size x="60" y="30"/>
+					<Color r="1" g="1" b="1"/>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Instructions1" relativePoint="TOPRIGHT" x="-30" y="5"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="UserColorPreview">
+					<Size x="60" y="30"/>
+					<Color r="1" g="1" b="1"/>
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.OthersColorPreview" relativePoint="TOPRIGHT" x="0" y="5"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 			<Layer level="BACKGROUND">
 				<FontString parentKey="Instructions1" text='Note: No preview available for "Re-color Other Players". Join a party or raid to see the effect. Tip: you can join an NPC party at any time by queueing in the Group Finder for a Follower Dungeon.' inherits="GameFontNormal" justifyH="LEFT">					<Size x="550" />
 					<Anchors>
 						<Anchor point="TOPLEFT" x="70" y="-10"/>
 					</Anchors>
 				</FontString>
-			</Layer>
-			<Layer level="BACKGROUND">
 				<FontString parentKey="Instructions2" text='Also, having "Display Class Colors" enabled in the Interface settings will disable this effect, but only on other players.' inherits="GameFontNormal" justifyH="LEFT">
 					<Size x="550" />
 					<Anchors>

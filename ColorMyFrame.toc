@@ -9,4 +9,4 @@
 ## AddonCompartmentFunc: ColorMyFrame_OnAddonCompartmentClick
 
 ColorMyFrame.xml
-# ColorMyFrame.lua
+ColorMyFrame.lua

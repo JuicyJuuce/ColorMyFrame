@@ -1,24 +1,71 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\Blizzard_SharedXML\UI.xsd">
-	<Script file="ColorMyFrame.lua"/>
-
-	<Frame name="ManyRaidFramesPreviewTemplate" mixin="ManyRaidFramesPreviewMixin" virtual="true">
+	<!--Script file="ColorMyFrame.lua"/-->
+	<!--Frame name="ColorMyFrame_ColorPreview">
+		<Size y="200"/>
+		<Frames>
+			<Frame setAllPoints="false">
+				<Size y="200" />
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="ColorWheel" atlas="colorblind-colorwheel" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+		</Frames>	
+	</Frame-->
+	<Frame name="ColorMyFrame_RaidFramePreviewTemplate" mixin="ColorMyFrame_RaidFramePreviewMixin" virtual="true">
 		<Size y="0"/>
 		<Frames>
-			<Button name="RaidFrameSettingsPreviewFrame1" parentKey="RaidFrame" inherits="CompactUnitFrameTemplate">
+			<Button name="ColorMyFrame_RaidFrameSettingsPreviewFrame" parentKey="RaidFrame" inherits="CompactUnitFrameTemplate">
 				<KeyValues>
 					<KeyValue key="ignoreCUFNameRequirement" value="true" type="boolean"/>
 				</KeyValues>
 				<Anchors>
-					<Anchor point="TOPRIGHT" x="-60" y="-20"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Instructions2" relativePoint="BOTTOMLEFT" x="38" y="-120"/>
 				</Anchors>
 			</Button>
+			<!--Button name="RaidFrameSettingsPreviewFrame2" parentKey="RaidFrame2" inherits="CompactUnitFrameTemplate">
+				<KeyValues>
+					<KeyValue key="ignoreCUFNameRequirement" value="true" type="boolean"/>
+				</KeyValues>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.RaidFrame" relativePoint="BOTTOMLEFT" x="0" y="0"/>
+				</Anchors>
+			</Button-->
 		</Frames>
 		<Layers>
+			<Layer level="ARTWORK">
+				<!-- placing the color preview is a complete hack job -->
+				<Texture parentKey="ColorWheel" atlas="colorblind-colorwheel" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Instructions1" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 			<Layer level="OVERLAY">
-				<FontString text="PREVIEW" inherits="GameFontHighlightSmall">
+				<FontString text="Your Raid Frame Color Preview" inherits="GameFontHighlightSmall">
 					<Anchors>
 						<Anchor point="BOTTOMLEFT" relativeKey="$parent.RaidFrame" relativePoint="TOPLEFT" x="0" y="6"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="BACKGROUND">
+				<FontString parentKey="Instructions1" text='Note: No preview available for "Re-color Other Players". Join a party or raid to see the effect. Tip: you can join an NPC party at any time by queueing in the Group Finder for a Follower Dungeon.' inherits="GameFontNormal" justifyH="LEFT">					<Size x="550" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="70" y="-10"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="BACKGROUND">
+				<FontString parentKey="Instructions2" text='Also, having "Display Class Colors" enabled in the Interface settings will disable this effect, but only on other players.' inherits="GameFontNormal" justifyH="LEFT">
+					<Size x="550" />
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Instructions1" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 					</Anchors>
 				</FontString>
 			</Layer>

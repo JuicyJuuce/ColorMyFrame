@@ -2,6 +2,13 @@
 --   addSearchTags?
 --   fixdefaultsbutton
 --   check if my use of UnitIsEnemy(unit, "player") correctly detects arena frames
+--   onSettingsChanged, RegisterAddonSetting
+--   make your preview frame in settings live update
+--   add text below the preview frame indicating that user needs to join a party or raid to preview others' colors.
+--     "Preview your frame color:"
+--     "Note: no preview available for re-coloring party/raid frames of others. Join a party or raid to see the
+--      effects. Tip: you can join an NPC party at any time by queueing for a follower dungeon."
+--   maybe disable the secure hook if both color options are unchecked?
 
 local thisAddonName, ns = ...
 local alternateAddonName = "NEW Color My Frame"
@@ -71,12 +78,18 @@ Settings.RegisterAddOnCategory(category)
 ]]
 
 ---[[
-ManyRaidFramesPreviewMixin = { };
+ColorMyFrame_RaidFramePreviewMixin = { };
 
-function ManyRaidFramesPreviewMixin:OnLoad()
-    --print("in ManyRaidFramesPreviewMixin:OnLoad()")
+function ColorMyFrame_RaidFramePreviewMixin:OnLoad()
+    --print("in ColorMyFrame_RaidFramePreviewMixin:OnLoad()")
     CompactUnitFrame_SetUpFrame(self.RaidFrame, DefaultCompactUnitFrameSetup);
     CompactUnitFrame_SetUnit(self.RaidFrame, "player");
+    CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
+--[[
+    CompactUnitFrame_SetUpFrame(self.RaidFrame2, DefaultCompactUnitFrameSetup);
+    CompactUnitFrame_SetUnit(self.RaidFrame2, "player");
+    CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame2, "GROUP_ROSTER_UPDATE");
+--]]
 end
 
 function f:doNewADDON_LOADED(event, addOnName)
@@ -96,7 +109,7 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)
 
-    f.category, f.layout = Settings.RegisterVerticalLayoutCategory(alternateAddonName)
+    self.category, self.layout = Settings.RegisterVerticalLayoutCategory(alternateAddonName)
 
     --layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(PING_SYSTEM_LABEL));
 
@@ -144,7 +157,7 @@ function f:doNewADDON_LOADED(event, addOnName)
 
         local addSearchTags = true;
         local tooltip = "Select the color that you want your own raid frame to be. Note: due to how raid frames are shaded, the result will appear a little darker."
-        local initializer = CreateSettingsButtonInitializer("Your raid frame color", "Select Color", OnButtonClick, tooltip, addSearchTags);
+        local initializer = CreateSettingsButtonInitializer("Your Raid Frame Color", "Select Color", OnButtonClick, tooltip, addSearchTags);
         self.layout:AddInitializer(initializer);
     end
 --[[
@@ -169,63 +182,44 @@ function f:doNewADDON_LOADED(event, addOnName)
 
         local variable = "recolorOthers"
         local name = "Re-color Other Players"
-        local tooltip = "Change the colors of _other_ player's frames. Class colors must be disabled."
+        local tooltip = "Change the colors of OTHER players' frames. Class colors must be disabled."
         local defaultValue = false
         local value = ColorMyFrame_SavedVars[variable] or defaultValue
 
-        local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
-        --Settings.CreateCheckBox(f.category, setting, tooltip)
-        local initializer = CreateSettingsCheckBoxWithButtonInitializer(setting, "Select Color", OnButtonClick, true, "Your raid frame color") --addSearchTags?
+        local setting = Settings.RegisterAddOnSetting(self.category, name, variable, type(value), value)
+        --Settings.CreateCheckBox(self.category, setting, tooltip)
+        local initializer = CreateSettingsCheckBoxWithButtonInitializer(setting, "Select Color", OnButtonClick, true, tooltip) --addSearchTags?
         Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
         self.layout:AddInitializer(initializer);
     end
 
-    do
-        local variable = "slider"
-        local name = "Test Slider"
-        local tooltip = "This is a tooltip for the slider."
-        local defaultValue = 180
-        --print("ColorMyFrame_SavedVars[variable] is "..(ColorMyFrame_SavedVars[variable] or "nil"))
-        local value = ColorMyFrame_SavedVars[variable] or defaultValue
-        local minValue = 90
-        local maxValue = 360
-        local step = 10
-
-        local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
-        local options = Settings.CreateSliderOptions(minValue, maxValue, step)
-        options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right);
-        Settings.CreateSlider(f.category, setting, options, tooltip)
-        Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
-    end
+	do
+		local colorText2 = self:CreateFontString(nil, "ARTWORK", "GameFontNormal");
+		colorText2:SetText("Yourrrrrrrrrrrrr raid frame color: r = "..self.newDb.r..", g = "..self.newDb.g..", b = "..self.newDb.b);
+		colorText2:SetPoint("TOP", bddddddtn, 0, -8);
+	end
 
     do
-        local variable = "selection"
-        local defaultValue = 2  -- Corresponds to "Option 2" below.
-        local value = ColorMyFrame_SavedVars[variable] or defaultValue
-        local name = "Test Dropdown"
-        local tooltip = "This is a tooltip for the dropdown."
-
-        local function GetOptions()
-            local container = Settings.CreateControlTextContainer()
-            container:Add(1, "Option 1")
-            container:Add(2, "Option 2")
-            container:Add(3, "Option 3")
-            return container:GetData()
-        end
-
-        local setting = Settings.RegisterAddOnSetting(f.category, name, variable, type(value), value)
-        Settings.CreateDropDown(f.category, setting, GetOptions, tooltip)
-        Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
+        local colorText = self:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        colorText:SetPoint("TOPLEFT", 0, -40)
+        colorText:SetText("Your raiddddddddd frame color: r = "..self.newDb.r..", g = "..self.newDb.g..", b = "..self.newDb.b)
     end
+
+    local splot = CreateFrame('Frame', nil, self);
+    splot:SetSize(64, 64);
+    splot:SetPoint("TOPLEFT", 0, -100);
+    local t = splot:CreateTexture(nil, 'ARTWORK');
+    t:SetAllPoints(splot);
+    t:SetColorTexture(self.newDb.r, self.newDb.g, self.newDb.b);
 
     -- Raid Frame Preview
     do
         local data = { };
-        local initializer = Settings.CreatePanelInitializer("ManyRaidFramesPreviewTemplate", data);
+        local initializer = Settings.CreatePanelInitializer("ColorMyFrame_RaidFramePreviewTemplate", data);
         self.layout:AddInitializer(initializer);
     end
 
-    Settings.RegisterAddOnCategory(f.category)
+    Settings.RegisterAddOnCategory(self.category)
 end
 --]]
 
@@ -258,7 +252,7 @@ function f:myUpdateHealthColor(frame)
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
     -- color other players' frames
-    elseif  ( not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player") ) then
+    elseif  ( Settings.GetSetting("recolorOthers") and (not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player")) ) then
         print("frame in myUpdateHealthColor:")
         print(unit)
         myPrintTable(frame, 0, 1, "lass", true)
@@ -320,7 +314,7 @@ function f:InitializeOptions()
     t:SetAllPoints(splot);
 
     local function setOptionsPanelColor()
-        colorText:SetText("Your raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
+        colorText:SetText("Your raid frameeeeeeee color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
         t:SetColorTexture(self.db.r, self.db.g, self.db.b);
     end
     setOptionsPanelColor()
@@ -360,11 +354,9 @@ SLASH_CMF1 = "/cmf"
 SLASH_CMF2 = "/colormyframe"
 
 SlashCmdList.CMF = function(msg, editBox)
-    InterfaceOptionsFrame_OpenToCategory(f.optionsPanel)
+    Settings.OpenToCategory(f.category:GetID())
 end
 
 function ColorMyFrame_OnAddonCompartmentClick(addonName, buttonName, menuButtonFrame)
-    --print("f.category:")
-    --myPrintTable(f.category)
-    InterfaceOptionsFrame_OpenToCategory(f.optionsPanel)
+    Settings.OpenToCategory(f.category:GetID())
 end

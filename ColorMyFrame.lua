@@ -9,11 +9,12 @@
 --     "Note: no preview available for re-coloring party/raid frames of others. Join a party or raid to see the
 --      effects. Tip: you can join an NPC party at any time by queueing for a follower dungeon."
 --   maybe disable the secure hook if both color options are unchecked?
+--   align color texture previews with buttons
 
 local thisAddonName, ns = ...
 local thisAddonTitle = "Color My Frame"
 
-local alternateAddonName = "NEW Color My Frame"
+local alternateAddonName = thisAddonTitle --"NEW Color My Frame"
 --print(thisAddonName, ns.foo)
 
 local defaults = {
@@ -23,13 +24,16 @@ local defaults = {
 
 local newDefaults = {
     recolorOthers = false,
-    slider = 140,
-    selection = 1,
-    r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
-    othersR = 0/255, othersG = 255/255, othersB = 0/255, -- green
+    r = 255/255,
+    g = 200/255,
+    b = 0/255, -- yellow-orange
+    othersR = 0/255,
+    othersG = 255/255,
+    othersB = 0/255, -- green
 }
 
 local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel, searchString, showParentKey, parentKey)
+--[[
     if type(yourTable) == "table" then
         recurseLevel = recurseLevel or 0
         maxRecurseLevel = maxRecurseLevel or 0
@@ -60,6 +64,7 @@ local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel, searchStri
     else
         print(indentString, " is not a table.")
     end
+--]]
 end
 
 local f = CreateFrame("Frame")
@@ -84,8 +89,8 @@ function ColorMyFrame_RaidFramePreviewMixin:OnLoad()
     CompactUnitFrame_SetUnit(self.RaidFrame, "player");
     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
 
-    self.UserColorPreview:SetColorTexture(f.newDb.r, f.newDb.g, f.newDb.b);
-    self.OthersColorPreview:SetColorTexture(f.newDb.othersR, f.newDb.othersG, f.newDb.othersB);
+    self.UserColorPreview:SetColorTexture(f.db.r, f.db.g, f.db.b);
+    self.OthersColorPreview:SetColorTexture(f.db.othersR, f.db.othersG, f.db.othersB);
 
 --[[
     CompactUnitFrame_SetUpFrame(self.RaidFrame2, DefaultCompactUnitFrameSetup);
@@ -99,7 +104,7 @@ function f:doNewADDON_LOADED(event, addOnName)
     ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(newDefaults)
     --print("printing ColorMyFrame_SavedVars:")
     --myPrintTable(ColorMyFrame_SavedVars)
-    self.newDb = ColorMyFrame_SavedVars
+    self.db = ColorMyFrame_SavedVars
 
     -- am i using this?
     local function OnSettingChanged(_, setting, value)
@@ -136,7 +141,7 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function userColorCallback(restore)
         -- Update our internal storage.
-        self.newDb.r, self.newDb.g, self.newDb.b = newRGB(restore)
+        self.db.r, self.db.g, self.db.b = newRGB(restore)
         -- And update any UI elements that use this color...
         CompactRaidFrameContainer:TryUpdate()
         --CompactUnitFrameProfiles:ApplyCurrentSettings()
@@ -144,7 +149,7 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function othersColorCallback(restore)
         -- Update our internal storage.
-        self.newDb.othersR, self.newDb.othersG, self.newDb.othersB = newRGB(restore)
+        self.db.othersR, self.db.othersG, self.db.othersB = newRGB(restore)
         -- And update any UI elements that use this color...
         CompactRaidFrameContainer:TryUpdate()
         --CompactUnitFrameProfiles:ApplyCurrentSettings()
@@ -154,7 +159,7 @@ function f:doNewADDON_LOADED(event, addOnName)
     do
         local function OnButtonClick()
             print("button: Select Your Color")
-            ShowColorPicker(self.newDb.r, self.newDb.g, self.newDb.b, userColorCallback);
+            ShowColorPicker(self.db.r, self.db.g, self.db.b, userColorCallback);
         end
 
         local addSearchTags = true;
@@ -177,9 +182,9 @@ function f:doNewADDON_LOADED(event, addOnName)
     do
         local function OnButtonClick()
             print("button: Re-color Other Players")
-            --print("print self.newDb:")
-            --myPrintTable(self.newDb)
-            ShowColorPicker(self.newDb.othersR, self.newDb.othersG, self.newDb.othersB, othersColorCallback);
+            --print("print self.db:")
+            --myPrintTable(self.db)
+            ShowColorPicker(self.db.othersR, self.db.othersG, self.db.othersB, othersColorCallback);
         end
 
         local variable = "recolorOthers"
@@ -194,17 +199,17 @@ function f:doNewADDON_LOADED(event, addOnName)
         Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
         self.layout:AddInitializer(initializer);
     end
-
+--[[
 	do
 		local colorText2 = self:CreateFontString(nil, "ARTWORK", "GameFontNormal");
-		colorText2:SetText("Yourrrrrrrrrrrrr raid frame color: r = "..self.newDb.r..", g = "..self.newDb.g..", b = "..self.newDb.b);
+		colorText2:SetText("Yourrrrrrrrrrrrr raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b);
 		colorText2:SetPoint("TOP", bddddddtn, 0, -8);
 	end
 
     do
         local colorText = self:CreateFontString("ARTWORK", nil, "GameFontNormal")
         colorText:SetPoint("TOPLEFT", 0, -40)
-        colorText:SetText("Your raiddddddddd frame color: r = "..self.newDb.r..", g = "..self.newDb.g..", b = "..self.newDb.b)
+        colorText:SetText("Your raiddddddddd frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
     end
 
     local splot = CreateFrame('Frame', nil, self);
@@ -212,8 +217,8 @@ function f:doNewADDON_LOADED(event, addOnName)
     splot:SetPoint("TOPLEFT", 0, -100);
     local t = splot:CreateTexture(nil, 'ARTWORK');
     t:SetAllPoints(splot);
-    t:SetColorTexture(self.newDb.r, self.newDb.g, self.newDb.b);
-
+    t:SetColorTexture(self.db.r, self.db.g, self.db.b);
+--]]
     -- Raid Frame Preview
     do
         local data = { };
@@ -230,12 +235,9 @@ function f:OnEvent(event, ...)
 end
 
 f:RegisterEvent("ADDON_LOADED")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
+--f:RegisterEvent("PLAYER_ENTERING_WORLD")
 --f:RegisterEvent("CHAT_MSG_CHANNEL")
 f:SetScript("OnEvent", f.OnEvent)
-
---      local newList = CreateFrame("Button", "DropDownList"..UIDROPDOWNMENU_MAXLEVELS, nil, "UIDropDownListTemplate");
-
 
 -- this function is the actual meat of the addon
 function f:myUpdateHealthColor(frame)
@@ -249,7 +251,7 @@ function f:myUpdateHealthColor(frame)
 
     -- color user's frame
     if ( UnitIsUnit(unit, "player") ) then
-        local r, g, b = self.newDb.r, self.newDb.g, self.newDb.b
+        local r, g, b = self.db.r, self.db.g, self.db.b
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
@@ -258,7 +260,7 @@ function f:myUpdateHealthColor(frame)
         print("frame in myUpdateHealthColor:")
         print(unit)
         myPrintTable(frame, 0, 1, "lass", true)
-        local r, g, b = self.newDb.othersR, self.newDb.othersG, self.newDb.othersB
+        local r, g, b = self.db.othersR, self.db.othersG, self.db.othersB
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
@@ -268,27 +270,29 @@ end
 function f:ADDON_LOADED(event, addOnName)
     if addOnName == thisAddonName then
         self:doNewADDON_LOADED(event, addOnName)
-
+--[[
         ColorMyFrameDB = ColorMyFrameDB or CopyTable(defaults)
         --print("printing ColorMyFrameDB:")
         --myPrintTable(ColorMyFrameDB)
-        self.db = ColorMyFrameDB
+        self.oldDb = ColorMyFrameDB
         self:InitializeOptions()
         hooksecurefunc("JumpOrAscendStart", function()
-            if self.db.someOption then
+            if self.oldDb.someOption then
                 --print("Your character jumped.")
             end
         end)
+--]]
         hooksecurefunc("CompactUnitFrame_UpdateHealthColor", function(frame)
             self:myUpdateHealthColor(frame)
         end)
     end
 end
-
+--[[
 function f:PLAYER_ENTERING_WORLD(event, isLogin, isReload)
     --print(event, isLogin, isReload)
 end
-
+--]]
+--[[
 function f:InitializeOptions()
     self.optionsPanel = CreateFrame("Frame")
     self.optionsPanel.name = thisAddonTitle
@@ -298,9 +302,9 @@ function f:InitializeOptions()
     cb.Text:SetText("Print when you jump")
     -- there already is an existing OnClick script that plays a sound, hook it
     cb:HookScript("OnClick", function(_, btn, down)
-        self.db.someOption = cb:GetChecked()
+        self.oldDb.someOption = cb:GetChecked()
     end)
-    cb:SetChecked(self.db.someOption)
+    cb:SetChecked(self.oldDb.someOption)
 
     local btn = CreateFrame("Button", nil, self.optionsPanel, "UIPanelButtonTemplate")
     btn:SetPoint("TOPLEFT", cb, 0, -40)
@@ -317,10 +321,11 @@ function f:InitializeOptions()
     t:SetAllPoints(splot);
 
     local function setOptionsPanelColor()
-        colorText:SetText("Your raid frameeeeeeee color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
-        t:SetColorTexture(self.db.r, self.db.g, self.db.b);
+        colorText:SetText("Your raid frameeeeeeee color: r = "..self.oldDb.r..", g = "..self.oldDb.g..", b = "..self.oldDb.b)
+        t:SetColorTexture(self.oldDb.r, self.oldDb.g, self.oldDb.b);
     end
     setOptionsPanelColor()
+--]]
 --[[
     local function ShowColorPicker(r, g, b, changedCallback)
      local info = {}
@@ -339,20 +344,20 @@ function f:InitializeOptions()
         end
 
         -- Update our internal storage.
-        self.db.r, self.db.g, self.db.b = newR, newG, newB;
+        self.oldDb.r, self.oldDb.g, self.oldDb.b = newR, newG, newB;
         setOptionsPanelColor()
         -- And update any UI elements that use this color...
         CompactRaidFrameContainer:TryUpdate()
     end
 --]]
+--[[
     btn:SetScript("OnClick", function()
         print("You clicked me!")
-        ShowColorPicker(self.db.r, self.db.g, self.db.b, userColorCallback);
+        ShowColorPicker(self.oldDb.r, self.oldDb.g, self.oldDb.b, userColorCallback);
     end)
-
     InterfaceOptions_AddCategory(self.optionsPanel)
 end
-
+--]]
 SLASH_CMF1 = "/cmf"
 SLASH_CMF2 = "/colormyframe"
 

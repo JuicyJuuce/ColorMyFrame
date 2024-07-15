@@ -17,12 +17,12 @@ local thisAddonTitle = "Color My Frame"
 local alternateAddonName = thisAddonTitle --"NEW Color My Frame"
 --print(thisAddonName, ns.foo)
 
-local defaults = {
+local oldDefaults = {
     someOption = true,
     r = 255/255, g = 200/255, b = 0/255, -- yellow-orange
 }
 
-local newDefaults = {
+local defaults = {
     recolorOthers = false,
     r = 255/255,
     g = 200/255,
@@ -32,30 +32,51 @@ local newDefaults = {
     othersB = 0/255, -- green
 }
 
-local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel, searchString, showParentKey, parentKey)
---[[
+local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel)
     if type(yourTable) == "table" then
+        recurseLevel = recurseLevel or 0
+        maxRecurseLevel = maxRecurseLevel or 0
+        indentString = string.rep("  ", recurseLevel)    
+        for key, value in pairs(yourTable) do
+            if type(value) == "table" then
+                print(indentString, key.." is table:")
+                if (maxRecurseLevel == 0 or recurseLevel < maxRecurseLevel) then
+                    myPrintTable(value, recurseLevel + 1, maxRecurseLevel)
+                end
+            else
+                print(indentString, key, value)
+            end
+        end
+    else
+        print(indentString, " is not a table.")
+    end
+end
+
+local function myPrintTable2(yourTable, recurseLevel, maxRecurseLevel, searchString, showParentKey, parentKey)
+    if type(yourTable) == "table" then
+        print("myPrintTable2 was sent a table")
         recurseLevel = recurseLevel or 0
         maxRecurseLevel = maxRecurseLevel or 0
         searchString = searchString or ""
         showParentKey = showParentKey or false
         parentKey = showParentKey and (parentKey or "") or ""
         indentString = string.rep("  ", recurseLevel) 
-        local classStrFound
+        local stringFound
         for key, value in pairs(yourTable) do
+            print("myPrintTable2 in loop")
             if (searchString ~= "") then
                 print("searchString is ", searchString, ", parentKey is ", parentKey, ", key is ", key)
-                classStrFound = string.find(indentString, searchString)
+                stringFound = string.find(indentString, searchString)
             else
-                classStrFound = nil
+                stringFound = nil
             end
             if type(value) == "table" then
-                --print(indentString, parentKey, key.." is table:")
+                print(indentString, parentKey, key.." is table:")
                 if (maxRecurseLevel == 0 or recurseLevel < maxRecurseLevel) then
-                    myPrintTable(value, recurseLevel + 1, maxRecurseLevel, showParentKey, key)
+                    myPrintTable2(value, recurseLevel + 1, maxRecurseLevel, searchString, showParentKey, key)
                 end
-            elseif (not searchString or (classStrFound)) then
-                    if (classStrFound) then
+            elseif (not searchString or (stringFound)) then
+                    if (stringFound) then
                         indentString = indentString.."    ---->  "
                     end
                     print(parentKey, indentString, key, value)
@@ -64,7 +85,6 @@ local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel, searchStri
     else
         print(indentString, " is not a table.")
     end
---]]
 end
 
 local f = CreateFrame("Frame")
@@ -92,6 +112,9 @@ function ColorMyFrame_RaidFramePreviewMixin:OnLoad()
     self.UserColorPreview:SetColorTexture(f.db.r, f.db.g, f.db.b);
     self.OthersColorPreview:SetColorTexture(f.db.othersR, f.db.othersG, f.db.othersB);
 
+    print("self in ColorMyFrame_RaidFramePreviewMixin:")
+    myPrintTable(self, 0, 1)
+    print("end self in ColorMyFrame_RaidFramePreviewMixin")
 --[[
     CompactUnitFrame_SetUpFrame(self.RaidFrame2, DefaultCompactUnitFrameSetup);
     CompactUnitFrame_SetUnit(self.RaidFrame2, "player");
@@ -99,19 +122,58 @@ function ColorMyFrame_RaidFramePreviewMixin:OnLoad()
 --]]
 end
 
+--function ColorMyFrame_OnUpdate(self, elapsed)
+--end
+
+function ColorMyFrame_RaidFramePreviewMixin:OnUpdate(elapsed)
+    print("in ColorMyFrame_RaidFramePreviewMixin:OnUpdate()")
+    self.UserColorPreview:SetColorTexture(f.db.r, f.db.g, f.db.b);
+    self.OthersColorPreview:SetColorTexture(f.db.othersR, f.db.othersG, f.db.othersB);
+    self.RaidFrame.needsUpdate = true
+    self.RaidFrame:TryUpdate()
+end
+--[[
+function SettingsCategoryListButtonMixin:Init(initializer)
+	local category = initializer.data.category;
+
+	self.Label:SetText(category:GetName());
+	self.Toggle:SetShown(category:HasSubcategories());
+	
+	local anyNew = false;
+	local layout = SettingsPanel:GetLayout(category);
+	if layout and layout:IsVerticalLayout() then
+		for _, initializer in layout:EnumerateInitializers() do
+			local setting = initializer.data.setting;
+			if setting and IsNewSettingInCurrentVersion(setting:GetVariable()) then
+				anyNew = true;
+				break;
+			end
+		end
+	end
+
+	self.NewFeature.BGLabel:SetPoint("RIGHT", 0.5, -0.5);
+	self.NewFeature.Label:SetPoint("RIGHT", 0, 0);
+	self.NewFeature:SetShown(anyNew);
+
+	self:SetExpanded(category.expanded);
+	self:SetSelected(g_selectionBehavior:IsSelected(self));
+end
+--]]
 function f:doNewADDON_LOADED(event, addOnName)
     --ColorMyFrame_SavedVars = {}
-    ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(newDefaults)
-    --print("printing ColorMyFrame_SavedVars:")
-    --myPrintTable(ColorMyFrame_SavedVars)
+    ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(defaults)
+    print("printing ColorMyFrame_SavedVars:")
+    myPrintTable(ColorMyFrame_SavedVars)
     self.db = ColorMyFrame_SavedVars
+    print("printing self.db:")
+    myPrintTable(self.db)
 
     -- am i using this?
     local function OnSettingChanged(_, setting, value)
         local variable = setting:GetVariable()
         ColorMyFrame_SavedVars[variable] = value
-        --print("print OnSettingsChanged(): ColorMyFrame_SavedVars")
-        --myPrintTable(ColorMyFrame_OnAddonCompartmentClick)
+        print("print OnSettingsChanged(): ColorMyFrame_SavedVars")
+        myPrintTable(ColorMyFrame_SavedVars)
     end
 
     --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)
@@ -143,7 +205,27 @@ function f:doNewADDON_LOADED(event, addOnName)
         -- Update our internal storage.
         self.db.r, self.db.g, self.db.b = newRGB(restore)
         -- And update any UI elements that use this color...
+        CompactPartyFrame:RefreshMembers()
         CompactRaidFrameContainer:TryUpdate()
+
+        --local data = { };
+        --local initializer = Settings.CreatePanelInitializer("ColorMyFrame_RaidFramePreviewTemplate", data);
+        --self.layout:AddInitializer(initializer);
+
+
+        print("ColorMyFrame_RaidFramePreviewTemplate in userColorCallback: ")
+        myPrintTable(ColorMyFrame_RaidFramePreviewTemplate)
+        print("end ColorMyFrame_RaidFramePreviewTemplate in userColorCallback")
+        print(ColorMyFrame_RaidFramePreviewTemplate)
+        print("self.OthersColorPreview")
+        myPrintTable(self.OthersColorPreview)
+        print(" end self.OthersColorPreview")
+        print(self.OthersColorPreview)
+        --self.RaidFrame:TryUpdate()
+        --print("ColorMyFrame_RaidFramePreviewMixin: ")
+        --myPrintTable(ColorMyFrame_RaidFramePreviewMixin, 0, 2)
+        --print("self.layout: ")
+        --myPrintTable(self.layout, 0, 3)
         --CompactUnitFrameProfiles:ApplyCurrentSettings()
     end
 
@@ -151,13 +233,20 @@ function f:doNewADDON_LOADED(event, addOnName)
         -- Update our internal storage.
         self.db.othersR, self.db.othersG, self.db.othersB = newRGB(restore)
         -- And update any UI elements that use this color...
+        CompactPartyFrame:RefreshMembers()
         CompactRaidFrameContainer:TryUpdate()
+        --self.RaidFrame:TryUpdate()
         --CompactUnitFrameProfiles:ApplyCurrentSettings()
     end
 
 -- Select user's color
     do
         local function OnButtonClick()
+            print("button: Your Raid Frame Color")
+            print("print self.db:")
+            myPrintTable(self.db)
+            print("self.layout.settings: ")
+            print(self.layout.settings)
             print("button: Select Your Color")
             ShowColorPicker(self.db.r, self.db.g, self.db.b, userColorCallback);
         end
@@ -182,8 +271,10 @@ function f:doNewADDON_LOADED(event, addOnName)
     do
         local function OnButtonClick()
             print("button: Re-color Other Players")
-            --print("print self.db:")
-            --myPrintTable(self.db)
+            print("print self.db:")
+            myPrintTable(self.db)
+            print("self.layout.settings: ")
+            print(self.layout.settings)
             ShowColorPicker(self.db.othersR, self.db.othersG, self.db.othersB, othersColorCallback);
         end
 
@@ -251,15 +342,17 @@ function f:myUpdateHealthColor(frame)
 
     -- color user's frame
     if ( UnitIsUnit(unit, "player") ) then
+        --print("frame in myUpdateHealthColor:", unit, ", r,g,b = ", r, ",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
+        --myPrintTable(frame, 0, 1)
+        --print("end")
         local r, g, b = self.db.r, self.db.g, self.db.b
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
     -- color other players' frames
-    elseif  ( Settings.GetSetting("recolorOthers") and (not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player")) ) then
-        print("frame in myUpdateHealthColor:")
-        print(unit)
-        myPrintTable(frame, 0, 1, "lass", true)
+    elseif  ( self.db.recolorOthers and (not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player")) ) then
+        --print("frame in myUpdateHealthColor:", unit, ", r,g,b = ", r, ",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
+        --myPrintTable2(frame, 0, 1, "lass", true)
         local r, g, b = self.db.othersR, self.db.othersG, self.db.othersB
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
@@ -271,7 +364,7 @@ function f:ADDON_LOADED(event, addOnName)
     if addOnName == thisAddonName then
         self:doNewADDON_LOADED(event, addOnName)
 --[[
-        ColorMyFrameDB = ColorMyFrameDB or CopyTable(defaults)
+        ColorMyFrameDB = ColorMyFrameDB or CopyTable(oldDefaults)
         --print("printing ColorMyFrameDB:")
         --myPrintTable(ColorMyFrameDB)
         self.oldDb = ColorMyFrameDB

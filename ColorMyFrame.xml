@@ -28,6 +28,16 @@
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Instructions2" relativePoint="BOTTOMLEFT" x="38" y="-120"/>
 				</Anchors>
+				<Scripts>
+					<OnUpdate>
+						print("in ColorMyFrame_RaidFramePreviewMixin:OnUpdate()")
+						self.UserColorPreview:SetColorTexture(f.db.r, f.db.g, f.db.b);
+						self.OthersColorPreview:SetColorTexture(f.db.othersR, f.db.othersG, f.db.othersB);
+						self.RaidFrame.needsUpdate = true
+						self.RaidFrame:TryUpdate()
+						self:OnUpdate(elapsed);
+					</OnUpdate>
+				</Scripts>
 			</Button>
 			<!--Button name="RaidFrameSettingsPreviewFrame2" parentKey="RaidFrame2" inherits="CompactUnitFrameTemplate">
 				<KeyValues>
@@ -40,26 +50,26 @@
 		</Frames>
 		<Layers>
 			<Layer level="OVERLAY">
-				<FontString text="Your Raid Frame Color Preview" inherits="GameFontHighlightSmall">
+				<FontString text="Your Raid Frame Color Preview:" inherits="GameFontHighlightSmall">
 					<Anchors>
 						<Anchor point="BOTTOMLEFT" relativeKey="$parent.RaidFrame" relativePoint="TOPLEFT" x="0" y="6"/>
 					</Anchors>
 				</FontString>
 			</Layer>
 			<Layer level="ARTWORK">
-				<!-- placing the color preview is a complete hack job -->
+				<!-- placing the color preview textures here is a complete hack job, but whatever -->
 				<Texture parentKey="OthersColorPreview">
-					<Size x="60" y="30"/>
+					<Size x="100" y="27"/>
 					<Color r="1" g="1" b="1"/>
 					<Anchors>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Instructions1" relativePoint="TOPRIGHT" x="-30" y="5"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Instructions1" relativePoint="TOPRIGHT" x="-30" y="8"/>
 					</Anchors>
 				</Texture>
 				<Texture parentKey="UserColorPreview">
-					<Size x="60" y="30"/>
+					<Size x="100" y="27"/>
 					<Color r="1" g="1" b="1"/>
 					<Anchors>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.OthersColorPreview" relativePoint="TOPRIGHT" x="0" y="5"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.OthersColorPreview" relativePoint="TOPRIGHT" x="0" y="8"/>
 					</Anchors>
 				</Texture>
 			</Layer>

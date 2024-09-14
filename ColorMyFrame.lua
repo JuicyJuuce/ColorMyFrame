@@ -86,6 +86,35 @@ local function myPrintTable2(yourTable, recurseLevel, maxRecurseLevel, searchStr
     end
 end
 
+local function dump(o,level)
+    level = level or 1
+    if type(o) == 'table' then
+        local s = {}
+        s[1] = '{ '
+        for k,v in pairs(o) do
+            if type(k) ~= 'number' then 
+                k = '"'..k..'"' 
+            end
+            s[#s+1] = string.rep('  ',level).. '['..k..'] = ' .. dump(v, level+1) .. ','
+        end
+        s[#s+1] = string.rep('  ',level) .. '} '
+        return table.concat(s , "\n")
+    else
+        return tostring(o or 'nil')
+    end
+end
+
+local function myPrintTable3(o)
+    local out = dump(o)
+    for i in string.gmatch(out, "[^\n]+") do
+        print(i)
+    end
+end
+
+--local t = {[1] = nil,[2] = { ["attr"] = { [1] = code,[2] = remaining,[3] = resetdate,["remaining"] = 990,["resetdate"] = 1638614242,["code"] = 200,} ,["tag"] = success,} ,[3] = nil,["attr"] = { } ,["tag"] = prowl,}
+--myPrintTable3(t)
+
+
 local f = CreateFrame("Frame")
 f.category = {}
 
@@ -162,16 +191,16 @@ function f:doNewADDON_LOADED(event, addOnName)
     --ColorMyFrame_SavedVars = {}
     ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(defaults)
     --print("printing ColorMyFrame_SavedVars:")
-    --myPrintTable(ColorMyFrame_SavedVars)
+    --myPrintTable3(ColorMyFrame_SavedVars)
     self.db = ColorMyFrame_SavedVars
     print("printing self.db:")
-    myPrintTable(self.db)
+    myPrintTable3(self.db)
 
     local function OnSettingChanged(_, setting, value)
         local variable = setting:GetVariable()
         ColorMyFrame_SavedVars[variable] = value
         print("print OnSettingsChanged(): ColorMyFrame_SavedVars")
-        myPrintTable(ColorMyFrame_SavedVars)
+        myPrintTable3(ColorMyFrame_SavedVars)
     end
 
     --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)
@@ -185,7 +214,7 @@ function f:doNewADDON_LOADED(event, addOnName)
         info.r, info.g, info.b = r, g, b
         info.swatchFunc, info.func, info.opacityFunc, info.cancelFunc = changedCallback, changedCallback, changedCallback, changedCallback;
         --print("info:")
-        --myPrintTable(info)
+        --myPrintTable3(info)
         ColorPickerFrame:SetupColorPickerAndShow(info)
     end
 
@@ -214,11 +243,11 @@ function f:doNewADDON_LOADED(event, addOnName)
 
 
         --print("ColorMyFrame_RaidFramePreviewTemplate in userColorCallback: ")
-        --myPrintTable(ColorMyFrame_RaidFramePreviewTemplate)
+        --myPrintTable3(ColorMyFrame_RaidFramePreviewTemplate)
         --print("end ColorMyFrame_RaidFramePreviewTemplate in userColorCallback")
         --print(ColorMyFrame_RaidFramePreviewTemplate)
         --print("self.OthersColorPreview")
-        --myPrintTable(self.OthersColorPreview)
+        --myPrintTable3(self.OthersColorPreview)
         --print(" end self.OthersColorPreview")
         --print(self.OthersColorPreview)
         --self.RaidFrame:TryUpdate()
@@ -244,7 +273,7 @@ function f:doNewADDON_LOADED(event, addOnName)
         local function OnButtonClick()
             print("button: Your Raid Frame Color")
             print("print self.db:")
-            myPrintTable(self.db)
+            myPrintTable3(self.db)
             print("self.layout.settings: ")
             print(self.layout.settings)
             print("button: Select Your Color")
@@ -272,7 +301,7 @@ function f:doNewADDON_LOADED(event, addOnName)
         local function OnButtonClick()
             print("button: Re-color Other Players")
             print("print self.db:")
-            myPrintTable(self.db)
+            myPrintTable3(self.db)
             print("self.layout.settings: ")
             print(self.layout.settings)
             ShowColorPicker(self.db.others.r, self.db.others.g, self.db.others.b, othersColorCallback);
@@ -284,7 +313,7 @@ function f:doNewADDON_LOADED(event, addOnName)
         local defaultValue = defaults.recolorOthers
         local value = ColorMyFrame_SavedVars[variable] or defaultValue
 
-        local variableColor = "recolorOthersColor"
+        local variableColor = "others"
         local nameColor = "Re-color Other Players"
         local tooltipColor = "The color other players frames will be set to."
         local defaultValueColor = {defaults.othersR, defaults.othersG, defaults.othersB}
@@ -375,7 +404,7 @@ function f:ADDON_LOADED(event, addOnName)
 --[[
         ColorMyFrameDB = ColorMyFrameDB or CopyTable(oldDefaults)
         --print("printing ColorMyFrameDB:")
-        --myPrintTable(ColorMyFrameDB)
+        --myPrintTable3(ColorMyFrameDB)
         self.oldDb = ColorMyFrameDB
         self:InitializeOptions()
         hooksecurefunc("JumpOrAscendStart", function()

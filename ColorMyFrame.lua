@@ -10,6 +10,9 @@
 --      effects. Tip: you can join an NPC party at any time by queueing for a follower dungeon."
 --   maybe disable the secure hook if both color options are unchecked?
 --   align color texture previews with buttons
+--   maybe register all settings with Settings.RegisterAddOnSetting() ?
+--   maybe raid preview frame will update if you change the event here:
+--     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
 
 local thisAddonName, ns = ...
 local thisAddonTitle = "Color My Frame"
@@ -24,12 +27,8 @@ local oldDefaults = {
 
 local defaults = {
     recolorOthers = false,
-    r = 255/255,
-    g = 200/255,
-    b = 0/255, -- yellow-orange
-    othersR = 0/255,
-    othersG = 255/255,
-    othersB = 0/255, -- green
+    player = {r = 255/255, g = 200/255, b = 0/255}, -- yellow-orange
+    others = {r = 0/255, g = 255/255, b = 0/255}, -- green
 }
 
 local function myPrintTable(yourTable, recurseLevel, maxRecurseLevel)
@@ -109,12 +108,12 @@ function ColorMyFrame_RaidFramePreviewMixin:OnLoad()
     CompactUnitFrame_SetUnit(self.RaidFrame, "player");
     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
 
-    self.UserColorPreview:SetColorTexture(f.db.r, f.db.g, f.db.b);
-    self.OthersColorPreview:SetColorTexture(f.db.othersR, f.db.othersG, f.db.othersB);
+    self.UserColorPreview:SetColorTexture(f.db.player.r, f.db.player.g, f.db.player.b);
+    self.OthersColorPreview:SetColorTexture(f.db.others.r, f.db.others.g, f.db.others.b);
 
-    print("self in ColorMyFrame_RaidFramePreviewMixin:")
-    myPrintTable(self, 0, 1)
-    print("end self in ColorMyFrame_RaidFramePreviewMixin")
+    --print("self in ColorMyFrame_RaidFramePreviewMixin:")
+    --myPrintTable(self, 0, 1)
+    --print("end self in ColorMyFrame_RaidFramePreviewMixin")
 --[[
     CompactUnitFrame_SetUpFrame(self.RaidFrame2, DefaultCompactUnitFrameSetup);
     CompactUnitFrame_SetUnit(self.RaidFrame2, "player");
@@ -127,8 +126,8 @@ end
 
 function ColorMyFrame_RaidFramePreviewMixin:OnUpdate(elapsed)
     print("in ColorMyFrame_RaidFramePreviewMixin:OnUpdate()")
-    self.UserColorPreview:SetColorTexture(f.db.r, f.db.g, f.db.b);
-    self.OthersColorPreview:SetColorTexture(f.db.othersR, f.db.othersG, f.db.othersB);
+    self.UserColorPreview:SetColorTexture(f.db.player.r, f.db.player.g, f.db.player.b);
+    self.OthersColorPreview:SetColorTexture(f.db.others.r, f.db.others.g, f.db.others.b);
     self.RaidFrame.needsUpdate = true
     self.RaidFrame:TryUpdate()
 end
@@ -162,13 +161,12 @@ end
 function f:doNewADDON_LOADED(event, addOnName)
     --ColorMyFrame_SavedVars = {}
     ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(defaults)
-    print("printing ColorMyFrame_SavedVars:")
-    myPrintTable(ColorMyFrame_SavedVars)
+    --print("printing ColorMyFrame_SavedVars:")
+    --myPrintTable(ColorMyFrame_SavedVars)
     self.db = ColorMyFrame_SavedVars
     print("printing self.db:")
     myPrintTable(self.db)
 
-    -- am i using this?
     local function OnSettingChanged(_, setting, value)
         local variable = setting:GetVariable()
         ColorMyFrame_SavedVars[variable] = value
@@ -203,8 +201,10 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function userColorCallback(restore)
         -- Update our internal storage.
-        self.db.r, self.db.g, self.db.b = newRGB(restore)
+        --self.db.player.r, self.db.player.g, self.db.player.b = newRGB(restore)
+        self.db.player = newRGB(restore)
         -- And update any UI elements that use this color...
+        -- EventRegistry:TriggerEvent("ActionBarShownSettingUpdated")
         CompactPartyFrame:RefreshMembers()
         CompactRaidFrameContainer:TryUpdate()
 
@@ -213,14 +213,14 @@ function f:doNewADDON_LOADED(event, addOnName)
         --self.layout:AddInitializer(initializer);
 
 
-        print("ColorMyFrame_RaidFramePreviewTemplate in userColorCallback: ")
-        myPrintTable(ColorMyFrame_RaidFramePreviewTemplate)
-        print("end ColorMyFrame_RaidFramePreviewTemplate in userColorCallback")
-        print(ColorMyFrame_RaidFramePreviewTemplate)
-        print("self.OthersColorPreview")
-        myPrintTable(self.OthersColorPreview)
-        print(" end self.OthersColorPreview")
-        print(self.OthersColorPreview)
+        --print("ColorMyFrame_RaidFramePreviewTemplate in userColorCallback: ")
+        --myPrintTable(ColorMyFrame_RaidFramePreviewTemplate)
+        --print("end ColorMyFrame_RaidFramePreviewTemplate in userColorCallback")
+        --print(ColorMyFrame_RaidFramePreviewTemplate)
+        --print("self.OthersColorPreview")
+        --myPrintTable(self.OthersColorPreview)
+        --print(" end self.OthersColorPreview")
+        --print(self.OthersColorPreview)
         --self.RaidFrame:TryUpdate()
         --print("ColorMyFrame_RaidFramePreviewMixin: ")
         --myPrintTable(ColorMyFrame_RaidFramePreviewMixin, 0, 2)
@@ -231,7 +231,7 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function othersColorCallback(restore)
         -- Update our internal storage.
-        self.db.othersR, self.db.othersG, self.db.othersB = newRGB(restore)
+        self.db.others.r, self.db.others.g, self.db.others.b = newRGB(restore)
         -- And update any UI elements that use this color...
         CompactPartyFrame:RefreshMembers()
         CompactRaidFrameContainer:TryUpdate()
@@ -248,7 +248,7 @@ function f:doNewADDON_LOADED(event, addOnName)
             print("self.layout.settings: ")
             print(self.layout.settings)
             print("button: Select Your Color")
-            ShowColorPicker(self.db.r, self.db.g, self.db.b, userColorCallback);
+            ShowColorPicker(self.db.player.r, self.db.player.g, self.db.player.b, userColorCallback);
         end
 
         local addSearchTags = true;
@@ -263,7 +263,7 @@ function f:doNewADDON_LOADED(event, addOnName)
                 ShowUIPanel(ChatConfigFrame);
                 ChatConfigFrameChatTabManager:UpdateSelection(DEFAULT_CHAT_FRAME:GetID());
         end;
-        local initializer = CreateSettingsCheckBoxWithButtonInitializer(setting, PING_CHAT_SETTINGS, OnButtonClick, true, OPTION_TOOLTIP_SHOW_PINGS_IN_CHAT);
+        local initializer = CreateSettingsCheckboxWithButtonInitializer(setting, PING_CHAT_SETTINGS, OnButtonClick, true, OPTION_TOOLTIP_SHOW_PINGS_IN_CHAT);
         local initializer = CreateSettingsCheckboxWithButtonInitializer("Your raid frame color", "Select Color", OnButtonClick, tooltip, addSearchTags);
     end
 ]]
@@ -275,32 +275,41 @@ function f:doNewADDON_LOADED(event, addOnName)
             myPrintTable(self.db)
             print("self.layout.settings: ")
             print(self.layout.settings)
-            ShowColorPicker(self.db.othersR, self.db.othersG, self.db.othersB, othersColorCallback);
+            ShowColorPicker(self.db.others.r, self.db.others.g, self.db.others.b, othersColorCallback);
         end
 
         local variable = "recolorOthers"
         local name = "Re-color Other Players"
         local tooltip = "Change the colors of OTHER players' frames. Class colors must be disabled."
-        local defaultValue = false
+        local defaultValue = defaults.recolorOthers
         local value = ColorMyFrame_SavedVars[variable] or defaultValue
 
-        local setting = Settings.RegisterAddOnSetting(self.category, name, variable, type(value), value)
+        local variableColor = "recolorOthersColor"
+        local nameColor = "Re-color Other Players"
+        local tooltipColor = "The color other players frames will be set to."
+        local defaultValueColor = {defaults.othersR, defaults.othersG, defaults.othersB}
+        local valueColor = ColorMyFrame_SavedVars[variableColor] or defaultValueColor
+
+        --function Settings.RegisterAddOnSetting(categoryTbl, name, variable, variableType, defaultValue)
+		assert(type(ColorMyFrame_SavedVars) == "table", "hey man, 'variableTbl' argument must be a table.");
+        local setting = Settings.RegisterAddOnSetting(self.category, variable, variable, ColorMyFrame_SavedVars, type(value), name, defaultValue)
+        local settingColor = Settings.RegisterAddOnSetting(self.category, variableColor, variableColor, ColorMyFrame_SavedVars, type(valueColor), nameColor, defaultValueColor)
         --Settings.CreateCheckBox(self.category, setting, tooltip)
-        local initializer = CreateSettingsCheckBoxWithButtonInitializer(setting, "Select Color", OnButtonClick, true, tooltip) --addSearchTags?
+        local initializer = CreateSettingsCheckboxWithButtonInitializer(setting, "Select Color", OnButtonClick, true, tooltip) --addSearchTags?
         Settings.SetOnValueChangedCallback(variable, OnSettingChanged)
         self.layout:AddInitializer(initializer);
     end
 --[[
 	do
 		local colorText2 = self:CreateFontString(nil, "ARTWORK", "GameFontNormal");
-		colorText2:SetText("Yourrrrrrrrrrrrr raid frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b);
+		colorText2:SetText("Yourrrrrrrrrrrrr raid frame color: r = "..self.db.player.r..", g = "..self.db.player.g..", b = "..self.db.player.b);
 		colorText2:SetPoint("TOP", bddddddtn, 0, -8);
 	end
 
     do
         local colorText = self:CreateFontString("ARTWORK", nil, "GameFontNormal")
         colorText:SetPoint("TOPLEFT", 0, -40)
-        colorText:SetText("Your raiddddddddd frame color: r = "..self.db.r..", g = "..self.db.g..", b = "..self.db.b)
+        colorText:SetText("Your raiddddddddd frame color: r = "..self.db.player.r..", g = "..self.db.player.g..", b = "..self.db.player.b)
     end
 
     local splot = CreateFrame('Frame', nil, self);
@@ -308,7 +317,7 @@ function f:doNewADDON_LOADED(event, addOnName)
     splot:SetPoint("TOPLEFT", 0, -100);
     local t = splot:CreateTexture(nil, 'ARTWORK');
     t:SetAllPoints(splot);
-    t:SetColorTexture(self.db.r, self.db.g, self.db.b);
+    t:SetColorTexture(self.db.player.r, self.db.player.g, self.db.player.b);
 --]]
     -- Raid Frame Preview
     do
@@ -345,7 +354,7 @@ function f:myUpdateHealthColor(frame)
         --print("frame in myUpdateHealthColor:", unit, ", r,g,b = ", r, ",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
         --myPrintTable(frame, 0, 1)
         --print("end")
-        local r, g, b = self.db.r, self.db.g, self.db.b
+        local r, g, b = self.db.player.r, self.db.player.g, self.db.player.b
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
@@ -353,7 +362,7 @@ function f:myUpdateHealthColor(frame)
     elseif  ( self.db.recolorOthers and (not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player")) ) then
         --print("frame in myUpdateHealthColor:", unit, ", r,g,b = ", r, ",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
         --myPrintTable2(frame, 0, 1, "lass", true)
-        local r, g, b = self.db.othersR, self.db.othersG, self.db.othersB
+        local r, g, b = self.db.others.r, self.db.others.g, self.db.others.b
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
@@ -380,6 +389,57 @@ function f:ADDON_LOADED(event, addOnName)
         end)
     end
 end
+
+--[[
+function f:OnDefault()
+	print("f:OnDefault() ran!!!")
+end
+
+function f.category:OnDefault()
+	print("f.category:OnDefault() ran!!!")
+end
+
+function f.layout:OnDefault()
+	print("f.layout:OnDefault() ran!!!")
+end
+
+function ColorMyFrame_OnDefault()
+	print("ColorMyFrame_OnDefault() ran!!!")
+end
+
+function f:OnRefresh()
+	print("f:OnRefresh() ran!!!")
+end
+
+function f.category:OnRefresh()
+	print("f.category:OnRefresh() ran!!!")
+end
+
+function f.layout:OnRefresh()
+	print("f.layout:OnRefresh() ran!!!")
+end
+
+function ColorMyFrame_OnRefresh()
+	print("ColorMyFrame_OnRefresh() ran!!!")
+end
+
+function f:OnCommit()
+	print("f:OnCommit() ran!!!")
+end
+
+function f.category:OnCommit()
+	print("f.category:OnCommit() ran!!!")
+end
+
+function f.layout:OnCommit()
+	print("f.layout:OnCommit() ran!!!")
+end
+
+function ColorMyFrame_OnCommit()
+	print("ColorMyFrame_OnCommit() ran!!!")
+end
+--]]
+
 --[[
 function f:PLAYER_ENTERING_WORLD(event, isLogin, isReload)
     --print(event, isLogin, isReload)

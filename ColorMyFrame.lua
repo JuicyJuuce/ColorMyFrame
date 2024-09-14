@@ -86,12 +86,38 @@ local function myPrintTable2(yourTable, recurseLevel, maxRecurseLevel, searchStr
     end
 end
 
+--[[
 local function dump(o,level)
     level = level or 1
     if type(o) == 'table' then
         local s = {}
         s[1] = '{ '
         for k,v in pairs(o) do
+            if type(k) ~= 'number' then 
+                k = '"'..k..'"' 
+            end
+            s[#s+1] = string.rep('  ',level).. '['..k..'] = ' .. dump(v, level+1) .. ','
+        end
+        s[#s+1] = string.rep('  ',level) .. '} '
+        return table.concat(s , "\n")
+    else
+        return tostring(o or 'nil')
+    end
+end
+--]]
+
+local function dump(o,level)
+    level = level or 1
+    if type(o) == 'table' then
+        local s = {}
+        s[1] = '{ '
+        o_sorted = {}
+        for n in pairs(o) do
+            table.insert(o_sorted, n)
+        end
+        table.sort(o_sorted)
+        for i,k in ipairs(o_sorted) do
+            local v = o[k]
             if type(k) ~= 'number' then 
                 k = '"'..k..'"' 
             end

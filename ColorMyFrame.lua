@@ -235,7 +235,8 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function userColorCallback(restore)
         -- Update our internal storage.
-        self.db.player.r, self.db.player.g, self.db.player.b = newRGB(restore)
+        local p = self.db.player
+        p.r, p.g, p.b = newRGB(restore)
         -- And update any UI elements that use this color...
         -- EventRegistry:TriggerEvent("ActionBarShownSettingUpdated")
         CompactPartyFrame:RefreshMembers()
@@ -264,7 +265,8 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function othersColorCallback(restore)
         -- Update our internal storage.
-        self.db.others.r, self.db.others.g, self.db.others.b = newRGB(restore)
+        local o = self.db.others
+        o.r, o.g, o.b = newRGB(restore)
         -- And update any UI elements that use this color...
         CompactPartyFrame:RefreshMembers()
         CompactRaidFrameContainer:TryUpdate()

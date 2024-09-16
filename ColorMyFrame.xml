@@ -79,7 +79,7 @@
 						<Anchor point="TOPLEFT" x="70" y="-10"/>
 					</Anchors>
 				</FontString>
-				<FontString parentKey="Instructions2" text='Also, having "Display Class Colors" enabled in the Interface settings will disable this effect, but only on other players.' inherits="GameFontNormal" justifyH="LEFT">
+				<FontString parentKey="Instructions2" text='Also, having "Display Class Colors" enabled in the Interface settings will disable the re-coloring of other players.' inherits="GameFontNormal" justifyH="LEFT">
 					<Size x="550" />
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeKey="$parent.Instructions1" relativePoint="BOTTOMLEFT" x="0" y="-10"/>

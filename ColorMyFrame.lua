@@ -86,26 +86,6 @@ local function myPrintTable2(yourTable, recurseLevel, maxRecurseLevel, searchStr
     end
 end
 
---[[
-local function dump(o,level)
-    level = level or 1
-    if type(o) == 'table' then
-        local s = {}
-        s[1] = '{ '
-        for k,v in pairs(o) do
-            if type(k) ~= 'number' then 
-                k = '"'..k..'"' 
-            end
-            s[#s+1] = string.rep('  ',level).. '['..k..'] = ' .. dump(v, level+1) .. ','
-        end
-        s[#s+1] = string.rep('  ',level) .. '} '
-        return table.concat(s , "\n")
-    else
-        return tostring(o or 'nil')
-    end
-end
---]]
-
 local function dump(o,level)
     level = level or 1
     if type(o) == 'table' then
@@ -131,8 +111,7 @@ local function dump(o,level)
 end
 
 local function myPrintTable3(o)
-    local out = dump(o)
-    for i in string.gmatch(out, "[^\n]+") do
+    for i in string.gmatch(dump(o), "[^\n]+") do
         print(i)
     end
 end
@@ -219,7 +198,7 @@ function f:doNewADDON_LOADED(event, addOnName)
     --print("printing ColorMyFrame_SavedVars:")
     --myPrintTable3(ColorMyFrame_SavedVars)
     self.db = ColorMyFrame_SavedVars
-    print("printing self.db:")
+    print("in f:doNewADDON_LOADED, printing self.db:")
     myPrintTable3(self.db)
 
     local function OnSettingChanged(_, setting, value)
@@ -239,7 +218,7 @@ function f:doNewADDON_LOADED(event, addOnName)
         local info = {}
         info.r, info.g, info.b = r, g, b
         info.swatchFunc, info.func, info.opacityFunc, info.cancelFunc = changedCallback, changedCallback, changedCallback, changedCallback;
-        --print("info:")
+        --print("in ShowColorPicker, info:")
         --myPrintTable3(info)
         ColorPickerFrame:SetupColorPickerAndShow(info)
     end
@@ -256,8 +235,7 @@ function f:doNewADDON_LOADED(event, addOnName)
 
     local function userColorCallback(restore)
         -- Update our internal storage.
-        --self.db.player.r, self.db.player.g, self.db.player.b = newRGB(restore)
-        self.db.player = newRGB(restore)
+        self.db.player.r, self.db.player.g, self.db.player.b = newRGB(restore)
         -- And update any UI elements that use this color...
         -- EventRegistry:TriggerEvent("ActionBarShownSettingUpdated")
         CompactPartyFrame:RefreshMembers()
@@ -301,9 +279,11 @@ function f:doNewADDON_LOADED(event, addOnName)
             print("print self.db:")
             myPrintTable3(self.db)
             print("self.layout.settings: ")
-            print(self.layout.settings)
+            myPrintTable3(self.layout.settings)
             print("button: Select Your Color")
             ShowColorPicker(self.db.player.r, self.db.player.g, self.db.player.b, userColorCallback);
+            print("print self.db after ShowColorPicker():")
+            myPrintTable3(self.db)
         end
 
         local addSearchTags = true;
@@ -407,7 +387,10 @@ function f:myUpdateHealthColor(frame)
     -- color user's frame
     if ( UnitIsUnit(unit, "player") ) then
         --print("frame in myUpdateHealthColor:", unit, ", r,g,b = ", r, ",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
+        --print("printing frame:")
         --myPrintTable(frame, 0, 1)
+        --print("in UnitIsUnit, printing self.db:")
+        --myPrintTable3(self.db)
         --print("end")
         local r, g, b = self.db.player.r, self.db.player.g, self.db.player.b
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then

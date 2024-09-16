@@ -1,18 +1,18 @@
+-- KNOWN BUGS:
+--   preview frame in settings is not live updating
+--      (workaround: reload ui)
+--   fix "Defaults" button in addon settings
+--      (workaround: delete \World of Warcraft\_retail_\WTF\Account\<account name>\SavedVariables\ColorMyFrame.lua)
+--
 -- TO DO:
+--   maybe raid preview frame will update if you change the event here:
+--     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
 --   addSearchTags?
---   fixdefaultsbutton
 --   check if my use of UnitIsEnemy(unit, "player") correctly detects arena frames
 --   onSettingsChanged, RegisterAddonSetting
---   make your preview frame in settings live update
---   add text below the preview frame indicating that user needs to join a party or raid to preview others' colors.
---     "Preview your frame color:"
---     "Note: no preview available for re-coloring party/raid frames of others. Join a party or raid to see the
---      effects. Tip: you can join an NPC party at any time by queueing for a follower dungeon."
 --   maybe disable the secure hook if both color options are unchecked?
 --   align color texture previews with buttons
 --   maybe register all settings with Settings.RegisterAddOnSetting() ?
---   maybe raid preview frame will update if you change the event here:
---     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
 
 local thisAddonName, ns = ...
 local thisAddonTitle = "Color My Frame"
@@ -116,10 +116,6 @@ local function myPrintTable3(o)
     end
 end
 
---local t = {[1] = nil,[2] = { ["attr"] = { [1] = code,[2] = remaining,[3] = resetdate,["remaining"] = 990,["resetdate"] = 1638614242,["code"] = 200,} ,["tag"] = success,} ,[3] = nil,["attr"] = { } ,["tag"] = prowl,}
---myPrintTable3(t)
-
-
 local f = CreateFrame("Frame")
 f.category = {}
 
@@ -193,13 +189,12 @@ function SettingsCategoryListButtonMixin:Init(initializer)
 end
 --]]
 function f:doNewADDON_LOADED(event, addOnName)
-    --ColorMyFrame_SavedVars = {}
     ColorMyFrame_SavedVars = ColorMyFrame_SavedVars or CopyTable(defaults)
     --print("printing ColorMyFrame_SavedVars:")
     --myPrintTable3(ColorMyFrame_SavedVars)
     self.db = ColorMyFrame_SavedVars
-    print("in f:doNewADDON_LOADED, printing self.db:")
-    myPrintTable3(self.db)
+    --print("in f:doNewADDON_LOADED, printing self.db:")
+    --myPrintTable3(self.db)
 
     local function OnSettingChanged(_, setting, value)
         local variable = setting:GetVariable()
@@ -277,15 +272,15 @@ function f:doNewADDON_LOADED(event, addOnName)
 -- Select user's color
     do
         local function OnButtonClick()
-            print("button: Your Raid Frame Color")
-            print("print self.db:")
-            myPrintTable3(self.db)
-            print("self.layout.settings: ")
-            myPrintTable3(self.layout.settings)
-            print("button: Select Your Color")
+            --print("button: Your Raid Frame Color")
+            --print("print self.db:")
+            --myPrintTable3(self.db)
+            --print("self.layout.settings: ")
+            --myPrintTable3(self.layout.settings)
+            --print("button: Select Your Color")
             ShowColorPicker(self.db.player.r, self.db.player.g, self.db.player.b, userColorCallback);
-            print("print self.db after ShowColorPicker():")
-            myPrintTable3(self.db)
+            --print("print self.db after ShowColorPicker():")
+            --myPrintTable3(self.db)
         end
 
         local addSearchTags = true;
@@ -307,11 +302,11 @@ function f:doNewADDON_LOADED(event, addOnName)
     -- Select other players's color
     do
         local function OnButtonClick()
-            print("button: Re-color Other Players")
-            print("print self.db:")
-            myPrintTable3(self.db)
-            print("self.layout.settings: ")
-            print(self.layout.settings)
+            --print("button: Re-color Other Players")
+            --print("print self.db:")
+            --myPrintTable3(self.db)
+            --print("self.layout.settings: ")
+            --print(self.layout.settings)
             ShowColorPicker(self.db.others.r, self.db.others.g, self.db.others.b, othersColorCallback);
         end
 

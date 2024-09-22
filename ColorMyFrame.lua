@@ -7,6 +7,7 @@
 -- TO DO:
 --   maybe raid preview frame will update if you change the event here:
 --     CompactUnitFrame_SetUpdateAllEvent(self.RaidFrame, "GROUP_ROSTER_UPDATE");
+--   why am i still using alternateAddonName?
 --   addSearchTags?
 --   check if my use of UnitIsEnemy(unit, "player") correctly detects arena frames
 --   onSettingsChanged, RegisterAddonSetting
@@ -199,8 +200,8 @@ function f:doNewADDON_LOADED(event, addOnName)
     local function OnSettingChanged(_, setting, value)
         local variable = setting:GetVariable()
         ColorMyFrame_SavedVars[variable] = value
-        print("print OnSettingsChanged(): ColorMyFrame_SavedVars")
-        myPrintTable3(ColorMyFrame_SavedVars)
+        --print("print OnSettingsChanged(): ColorMyFrame_SavedVars")
+        --myPrintTable3(ColorMyFrame_SavedVars)
     end
 
     --function Settings.SetupCVarDropdown(category, variable, variableType, options, label, tooltip)

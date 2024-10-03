@@ -54,7 +54,7 @@ end
 
 local function myPrintTable2(yourTable, recurseLevel, maxRecurseLevel, searchString, showParentKey, parentKey)
     if type(yourTable) == "table" then
-        print("myPrintTable2 was sent a table")
+        --print("myPrintTable2 was sent a table")
         recurseLevel = recurseLevel or 0
         maxRecurseLevel = maxRecurseLevel or 0
         searchString = searchString or ""
@@ -63,9 +63,9 @@ local function myPrintTable2(yourTable, recurseLevel, maxRecurseLevel, searchStr
         indentString = string.rep("  ", recurseLevel) 
         local stringFound
         for key, value in pairs(yourTable) do
-            print("myPrintTable2 in loop")
+            --print("myPrintTable2 in loop")
             if (searchString ~= "") then
-                print("searchString is ", searchString, ", parentKey is ", parentKey, ", key is ", key)
+                --print("searchString is ", searchString, ", parentKey is ", parentKey, ", key is ", key)
                 stringFound = string.find(indentString, searchString)
             else
                 stringFound = nil
@@ -96,7 +96,7 @@ local function dump(o,level)
         for n in pairs(o) do
             table.insert(o_sorted, n)
         end
-        table.sort(o_sorted)
+        --table.sort(o_sorted)
         for i,k in ipairs(o_sorted) do
             local v = o[k]
             if type(k) ~= 'number' then 
@@ -395,11 +395,12 @@ function f:myUpdateHealthColor(frame)
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
     -- color other players' frames
-    elseif  ( self.db.recolorOthers and (not useClassColors and UnitIsFriend(unit, "player") or not pvpUseClassColors and UnitIsEnemy(unit, "player")) ) then
-        --print("frame in myUpdateHealthColor:", unit, ", r,g,b = ", r, ",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
-        --myPrintTable2(frame, 0, 1, "lass", true)
+    elseif  ( self.db.recolorOthers and not useClassColors and UnitPlayerOrPetInParty(unit) ) then
         local r, g, b = self.db.others.r, self.db.others.g, self.db.others.b
+        --print("color other's frame in myUpdateHealthColor:", unit, ", r,g,b = ",r,",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
+        --myPrintTable2(frame, 0, 1, "lass", true)
         if ( r ~= frame.healthBar.r or g ~= frame.healthBar.g or b ~= frame.healthBar.b ) then
+            --print("color other's frame in myUpdateHealthColor:", unit, ", r,g,b = ",r,",",g,",",b,", recolorOthers = ", self.db.recolorOthers)
             frame.healthBar:SetStatusBarColor(r, g, b);
         end
     end

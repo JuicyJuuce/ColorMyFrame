@@ -3,7 +3,7 @@
 ## Title: Color My |c0000FF00F|r|c00FFC800r|r|c0000FF00ame|r
 ## Notes: Changes the color of your own unit frame to make it stand out among the other party/raid frames.
 ## Author: JuicyJuuce
-## Version: 0.1
+## Version: @project-version@
 ## IconTexture: Interface\AddOns\ColorMyFrame\ColorMyFrameIcon.png
 ## SavedVariables: ColorMyFrame_SavedVars
 ## AddonCompartmentFunc: ColorMyFrame_OnAddonCompartmentClick
